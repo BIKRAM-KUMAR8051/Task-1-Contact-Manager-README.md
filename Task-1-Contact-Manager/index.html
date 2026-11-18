@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contact Manager</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: #f1f5f9;
+      margin: 0;
+      padding: 30px 15px;
+      color: #1e293b;
+    }
+
+    .container {
+      max-width: 750px;
+      margin: auto;
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px #00000015;
+    }
+
+    h1 {
+      text-align: center;
+      color: #2563eb;
+    }
+
+    form {
+      display: grid;
+      gap: 12px;
+      margin-bottom: 25px;
+    }
+
+    input {
+      padding: 13px;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      font-size: 15px;
+    }
+
+    button {
+      padding: 12px;
+      border: none;
+      border-radius: 6px;
+      background: #2563eb;
+      color: white;
+      cursor: pointer;
+      font-size: 15px;
+    }
+
+    button:hover {
+      background: #1d4ed8;
+    }
+
+    .contact {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 15px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      margin-bottom: 10px;
+    }
+
+    .contact p {
+      margin: 5px 0;
+      overflow-wrap: anywhere;
+    }
+
+    .delete {
+      background: #dc2626;
+    }
+
+    .delete:hover {
+      background: #b91c1c;
+    }
+
+    #message {
+      text-align: center;
+      color: #475569;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h1>Contact Manager</h1>
+
+    <form id="contactForm">
+      <input type="text" id="name" placeholder="Enter Name" required>
+      <input type="email" id="email" placeholder="Enter Email" required>
+      <input type="tel" id="phone" placeholder="Enter Phone" required>
+      <button type="submit">Add Contact</button>
+    </form>
+
+    <h2>My Contacts</h2>
+    <p id="message">Loading contacts...</p>
+    <div id="contactList"></div>
+  </div>
+
+  <script>
+    const API = "http://localhost:3000/api/contacts";
+
+    const form = document.getElementById("contactForm");
+    const contactList = document.getElementById("contactList");
+    const message = document.getElementById("message");
+
+    async function loadContacts() {
+      try {
+        const response = await fetch(API);
+        if (!response.ok) throw new Error("Failed to load");
+
+        const contacts = await response.json();
+        contactList.innerHTML = "";
+        message.textContent = contacts.length
+          ? ""
+          : "No contacts added yet.";
+
+        contacts.forEach(contact => {
+          const div = document.createElement("div");
+          div.className = "contact";
+
+          const details = document.createElement("div");
+          const name = document.createElement("strong");
+          name.textContent = contact.name;
+
+          const email = document.createElement("p");
+          email.textContent = contact.email;
+
+          const phone = document.createElement("p");
+          phone.textContent = contact.phone;
+
+          details.append(name, email, phone);
+
+          const deleteBtn = document.createElement("button");
+          deleteBtn.className = "delete";
+          deleteBtn.textContent = "Delete";
+          deleteBtn.onclick = () => deleteContact(contact.id);
+
+          div.append(details, deleteBtn);
+          contactList.appendChild(div);
+        });
+      } catch (error) {
+        message.textContent = "Cannot connect to server. Start the backend first.";
+      }
+    }
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const contact = {
+        name: document.getElementById("name").value.trim(),
+        email: document.getElementById("email").value.trim(),
+        phone: document.getElementById("phone").value.trim()
+      };
+
+      try {
+        const response = await fetch(API, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(contact)
+        });
+
+        if (!response.ok) throw new Error("Could not add contact");
+
+        form.reset();
+        loadContacts();
+      } catch (error) {
+        alert("Server connection failed!");
+      }
+    });
+
+    async function deleteContact(id) {
+      try {
+        const response = await fetch(`${API}/${id}`, {
+          method: "DELETE"
+        });
+
+        if (!response.ok) throw new Error("Delete failed");
+        loadContacts();
+      } catch (error) {
+        alert("Could not delete contact");
+      }
+    }
+
+    loadContacts();
+  </script>
+</body>
+</html>
