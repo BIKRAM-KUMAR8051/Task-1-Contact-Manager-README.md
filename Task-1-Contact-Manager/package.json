@@ -1,0 +1,12 @@
+{
+  "name": "contact-manager",
+  "version": "1.0.0",
+  "description": "Full Stack Contact Management System",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^5.1.0"
+  }
+}
